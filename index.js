@@ -50,18 +50,18 @@ parameter   -> category
 Methods     -> GET
 */
 
-booky.get("/c/:category", (req,res) => {
-    const getSpecificBook = database.books.filter((book) => 
-    book.category.includes(req.params.category)
+booky.get("/c/:category", (req, res) => {
+    const getSpecificBook = database.books.filter((book) =>
+        book.category.includes(req.params.category)
     );
 
-    if(getSpecificBook.length === 0){
+    if (getSpecificBook.length === 0) {
         return res.json({
             error: `No book found for the category of ${req.params.category} `,
         });
     }
 
-    return res.json({book: getSpecificBook});
+    return res.json({ book: getSpecificBook });
 });
 
 /* 
@@ -72,8 +72,8 @@ parameter   -> NONE
 Methods     -> GET
 */
 
-booky.get("/author",(req,res) => {
-    return res.json({author: database.author});
+booky.get("/author", (req, res) => {
+    return res.json({ author: database.author });
 })
 
 /* 
@@ -84,18 +84,18 @@ parameter   -> isbn
 Methods     -> GET
 */
 
-booky.get("/author/book/:isbn", (req,res) => {
-    const getSpecificAuthor = database.author.filter((author) => 
-    author.books.includes(req.params.isbn)
+booky.get("/author/book/:isbn", (req, res) => {
+    const getSpecificAuthor = database.author.filter((author) =>
+        author.books.includes(req.params.isbn)
     );
 
-    if(getSpecificAuthor.length === 0){
+    if (getSpecificAuthor.length === 0) {
         return res.json({
             error: `No book found for the category of ${req.params.isbn} `,
         });
     }
 
-    return res.json({book: getSpecificAuthor});
+    return res.json({ book: getSpecificAuthor });
 });
 
 /* 
@@ -106,8 +106,8 @@ parameter   -> NONE
 Methods     -> GET
 */
 
-booky.get("/publications",(req,res) => {
-    return res.json({publications: database.publication});
+booky.get("/publications", (req, res) => {
+    return res.json({ publications: database.publication });
 });
 
 /* 
@@ -118,11 +118,11 @@ parameter   -> NONE
 Methods     -> POST
 */
 
-booky.post("/book/add",(req,res) => {
-    const {newBook} = req.body;
+booky.post("/book/add", (req, res) => {
+    const { newBook } = req.body;
 
     database.books.push(newBook);
-    return res.json({books: database.books});
+    return res.json({ books: database.books });
 });
 //the browser can only perform get request to perform other req we need to use helper
 
@@ -134,11 +134,26 @@ parameter   -> NONE
 Methods     -> POST
 */
 
-booky.post("/author/add",(req,res) => {
-    const {newAuthor} = req.body;
+booky.post("/author/add", (req, res) => {
+    const { newAuthor } = req.body;
 
     database.author.push(newAuthor);
-    return res.json({books: database.author});
+    return res.json({ books: database.author });
+});
+
+/* 
+Route       -> /publication/add
+Description -> add new publication
+Access      -> public
+parameter   -> NONE
+Methods     -> POST
+*/
+
+booky.post("/publication/add", (req, res) => {
+    const { newPublication } = req.body;
+
+    database.publication.push(newPublication);
+    return res.json({ publications: database.publication });
 });
 
 /* 
@@ -149,11 +164,11 @@ parameter   -> NONE
 Methods     -> POST
 */
 
-booky.post("/publication/add",(req,res) => {
-    const {newPublication} = req.body;
+booky.post("/publication/add", (req, res) => {
+    const { newPublication } = req.body;
 
     database.publication.push(newPublication);
-    return res.json({books: database.publication});
+    return res.json({ books: database.publication });
 });
 
 /* 
@@ -164,15 +179,15 @@ parameter   -> NONE
 Methods     -> PUT
 */
 
-booky.put("/book/update/title/:isbn",(req,res) => {
+booky.put("/book/update/title/:isbn", (req, res) => {
     database.books.forEach((book) => {
-        if(book.ISBN === req.params.isbn){
+        if (book.ISBN === req.params.isbn) {
             book.title = req.body.newBookTitle;
-            return ;
+            return;
         }
     });
 
-    return res.json({books: database.books});
+    return res.json({ books: database.books });
 });
 //for each directly update the data where as map first make a new array than update so in foreach theres no new array.
 
@@ -184,25 +199,52 @@ parameter   -> NONE
 Methods     -> PUT
 */
 
-booky.put("/book/update/author/:isbn/:authorId",(req,res) => {
+booky.put("/book/update/author/:isbn/:authorId", (req, res) => {
     //update book database
     database.books.forEach((book) => {
-        if(book.ISBN === req.params.isbn){
+        if (book.ISBN === req.params.isbn) {
             return book.author.push(parseInt(req.params.authorId));
         }
     });
 
     //update author database
     database.author.forEach((author) => {
-        if(author.id === parseInt(req.params.authorId)){
+        if (author.id === parseInt(req.params.authorId)) {
             return author.books.push(req.params.isbn);
         }
     });
-    
+
     return res.json({
         books: database.books,
         author: database.author
     });
+});
+
+/* 
+Route       -> /publication/update/book
+Description -> add new new book to publication
+Access      -> public
+parameter   -> isbn
+Methods     -> PUT
+*/
+
+booky.put("/publication/update/book/:isbn", (req, res) => {
+    //update the publication database.
+    database.publication.forEach((publication) => {
+        if (publication.id === req.body.pubId) {
+            return publication.books.push(req.params.isbn);
+        }
+    });
+
+    //update the book database
+    database.books.forEach((book) => {
+        if (book.ISBN === req.params.isbn) {
+            book.publication = req.body.pubId;
+            return;
+        }
+    });
+
+    return res.json({ books: database.books, publication: database.publication, message: "successfully updated publication" });
 });
 
 booky.listen(4000, () => console.log("Hey, the server is running! 😎"));
