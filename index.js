@@ -1,4 +1,8 @@
+require("dotenv").config();
+
 const express = require("express");
+
+const mongoose = require("mongoose");
 
 //Database import
 const database = require("./database")
@@ -8,6 +12,19 @@ const booky = express();
 
 //Configuration
 booky.use(express.json());
+
+//Establish database connection
+mongoose.connect(
+    process.env.MONGO_URL,
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+      }
+).then(() => console.log("connection established !!!"));
+
+
 //Since our server don't understand json
 
 /* 
@@ -370,3 +387,8 @@ booky.delete("/publication/delete/book/:isbn/:pubId", (req, res) => {
 
 
 booky.listen(4000, () => console.log("Hey, the server is running! 😎"));
+
+//mongoose helps you with validation, relationship with other data.
+
+//mongoose model -> documrnt model of mongoDB
+//document is nothing but object of your database.
