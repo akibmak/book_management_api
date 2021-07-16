@@ -8,9 +8,9 @@ const mongoose = require("mongoose");
 const database = require("./database")
 
 //Models
-const BookModel = require("./database.book");
-const AuthorModel = require("./database.author");
-const PublicationModel = require("./database.publication");
+const BookModel = require("./database/book");
+const AuthorModel = require("./database/author");
+const PublicationModel = require("./database/publication");
 
 //Initialisation
 const booky = express();
@@ -39,8 +39,9 @@ Access      -> PUBLIC
 parameter   -> NONE
 Methods     -> GET
 */
-booky.get("/", (req, res) => {
-    return res.json({ books: database.books });
+booky.get("/", async (req, res) => {
+    const getAllBooks = await BookModel.find();
+    return res.json(getAllBooks);
 });
 
 /* 
@@ -51,11 +52,14 @@ parameter   -> ISBN
 Methods     -> GET
 */
 
-booky.get("/is/:isbn", (req, res) => {
-    const getSpecificBook = database.books.filter(
-        (book) => book.ISBN === req.params.isbn);
+booky.get("/is/:isbn", async (req, res) => {
 
-    if (getSpecificBook.length === 0) {
+    const getSpecificBook = await BookModel.findOne({ISBN: req.params.isbn})
+
+    // const getSpecificBook = database.books.filter(
+    //     (book) => book.ISBN === req.params.isbn);
+
+    if (!getSpecificBook) {
         return res.json({
             error: `No book found for the ISBN of ${req.params.isbn}`
         });
@@ -72,30 +76,34 @@ parameter   -> category
 Methods     -> GET
 */
 
-booky.get("/c/:category", (req, res) => {
-    const getSpecificBook = database.books.filter((book) =>
-        book.category.includes(req.params.category)
-    );
+booky.get("/c/:category", async (req, res) => {
 
-    if (getSpecificBook.length === 0) {
+    const getSpecificBooks = await BookModel.findOne({category: req.params.category});
+
+    // const getSpecificBook = database.books.filter((book) =>
+    //     book.category.includes(req.params.category)
+    // );
+
+    if (!getSpecificBooks) {
         return res.json({
             error: `No book found for the category of ${req.params.category} `,
         });
     }
 
-    return res.json({ book: getSpecificBook });
+    return res.json({ book: getSpecificBooks });
 });
 
 /* 
 Route       -> /author
-Description -> get specific books based on category
+Description -> get all author
 Access      -> public
 parameter   -> NONE
 Methods     -> GET
 */
 
-booky.get("/author", (req, res) => {
-    return res.json({ author: database.author });
+booky.get("/author", async (req, res) => {
+    const getAllAuthors = await AuthorModel.find();
+    return res.json({ author: getAllAuthors });
 })
 
 /* 
@@ -140,11 +148,13 @@ parameter   -> NONE
 Methods     -> POST
 */
 
-booky.post("/book/add", (req, res) => {
+booky.post("/book/add", async (req, res) => {
     const { newBook } = req.body;
 
-    database.books.push(newBook);
-    return res.json({ books: database.books });
+    const addNewBook = BookModel.create(newBook);
+
+   // database.books.push(newBook);
+    return res.json({ books: addNewBook, message: "book was added!" });
 });
 //the browser can only perform get request to perform other req we need to use helper
 
@@ -159,8 +169,10 @@ Methods     -> POST
 booky.post("/author/add", (req, res) => {
     const { newAuthor } = req.body;
 
-    database.author.push(newAuthor);
-    return res.json({ books: database.author });
+    AuthorModel.create(newAuthor);
+    //database.author.push(newAuthor);
+
+    return res.json({ books: newAuthor,message: "Author was added!" });
 });
 
 /* 
@@ -174,8 +186,9 @@ Methods     -> POST
 booky.post("/publication/add", (req, res) => {
     const { newPublication } = req.body;
 
-    database.publication.push(newPublication);
-    return res.json({ publications: database.publication });
+    PublicationModel.create(newPublication);
+    //database.publication.push(newPublication);
+    return res.json({ publications: newPublication, message: "publication was added!" });
 });
 
 /* 
@@ -201,15 +214,30 @@ parameter   -> NONE
 Methods     -> PUT
 */
 
-booky.put("/book/update/title/:isbn", (req, res) => {
-    database.books.forEach((book) => {
-        if (book.ISBN === req.params.isbn) {
-            book.title = req.body.newBookTitle;
-            return;
-        }
-    });
+booky.put("/book/update/title/:isbn", async (req, res) => {
 
-    return res.json({ books: database.books });
+    // database.books.forEach((book) => {
+    //     if (book.ISBN === req.params.isbn) {
+    //         book.title = req.body.newBookTitle;
+    //         return;
+    //     }
+    // });
+
+    // return res.json({ books: database.books });
+ 
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn,
+        },
+        {
+            title: req.body.bookTitle,
+        },
+        {
+            new: true,
+        }
+    );
+
+    return res.json({books: updatedBook});
 });
 //for each directly update the data where as map first make a new array than update so in foreach theres no new array.
 
