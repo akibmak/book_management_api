@@ -216,15 +216,6 @@ Methods     -> PUT
 
 booky.put("/book/update/title/:isbn", async (req, res) => {
 
-    // database.books.forEach((book) => {
-    //     if (book.ISBN === req.params.isbn) {
-    //         book.title = req.body.newBookTitle;
-    //         return;
-    //     }
-    // });
-
-    // return res.json({ books: database.books });
- 
     const updatedBook = await BookModel.findOneAndUpdate(
         {
             ISBN: req.params.isbn,
@@ -238,6 +229,16 @@ booky.put("/book/update/title/:isbn", async (req, res) => {
     );
 
     return res.json({books: updatedBook});
+
+    // database.books.forEach((book) => {
+    //     if (book.ISBN === req.params.isbn) {
+    //         book.title = req.body.newBookTitle;
+    //         return;
+    //     }
+    // });
+
+    // return res.json({ books: database.books });
+ 
 });
 //for each directly update the data where as map first make a new array than update so in foreach theres no new array.
 
@@ -250,25 +251,6 @@ Methods     -> PUT
 */
 
 booky.put("/book/update/author/:isbn", async (req, res) => {
-
-    //update book database
-    // database.books.forEach((book) => {
-    //     if (book.ISBN === req.params.isbn) {
-    //         return book.author.push(parseInt(req.params.authorId));
-    //     }
-    // });
-
-    //update author database
-    // database.author.forEach((author) => {
-    //     if (author.id === parseInt(req.params.authorId)) {
-    //         return author.books.push(req.params.isbn);
-    //     }
-    // });
-
-    // return res.json({
-    //     books: database.books,
-    //     author: database.author
-    // });
 
     //Upadate the Book databse
     const updatedBook = await BookModel.findOneAndUpdate(
@@ -305,6 +287,25 @@ booky.put("/book/update/author/:isbn", async (req, res) => {
         authors: updatedAuthor,
         message: "New Author was added!"
     });
+
+    //update book database
+    // database.books.forEach((book) => {
+    //     if (book.ISBN === req.params.isbn) {
+    //         return book.author.push(parseInt(req.params.authorId));
+    //     }
+    // });
+
+    //update author database
+    // database.author.forEach((author) => {
+    //     if (author.id === parseInt(req.params.authorId)) {
+    //         return author.books.push(req.params.isbn);
+    //     }
+    // });
+
+    // return res.json({
+    //     books: database.books,
+    //     author: database.author
+    // });
 
 });
 
@@ -343,14 +344,23 @@ parameter   -> isbn
 Methods     -> DELETE
 */
 
-booky.delete("/book/delete/:isbn", (req, res) => {
-    const updatedBookDatabase = database.books.filter(
-        (book) => book.ISBN !== req.params.isbn
+booky.delete("/book/delete/:isbn", async (req, res) => {
+    
+    const updatedBookDatabase = await BookModel.findOneAndDelete(
+        {
+            ISBN: req.params.isbn
+        }
     );
 
-    database.books = updatedBookDatabase;
+    // const updatedBookDatabase = database.books.filter(
+    //     (book) => book.ISBN !== req.params.isbn
+    // );
 
-    return res.json({ books: database.books });
+    // database.books = updatedBookDatabase;
+
+    // return res.json({ books: database.books });
+
+
 });
 
 /* 
@@ -361,30 +371,61 @@ parameter   -> isbn,authorid
 Methods     -> DELETE
 */
 
-booky.delete("/book/delete/author/:isbn/:authorId", (req, res) => {
+booky.delete("/book/delete/author/:isbn/:authorId", async (req, res) => {
 
-    //update the book id
-    database.books.forEach((book) => {
-        if (book.ISBN === req.params.isbn) {
-            const newAuthorList = book.author.filter((author) => author !== parseInt(req.params.authorId));
-            book.author = newAuthorList;
-            return;
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn
+        },
+        {
+            $pull: {
+                authors: parseInt(req.params.authorId)
+            }
+        },
+        {
+            new: true
         }
-    });
+    );
 
-    //update author database
-    database.author.forEach((author) => {
-        if (author.id === parseInt(req.params.authorId)) {
-            const newBookList = author.books.filter(
-                (book) => book !== req.params.isbn
-                );
-
-                author.books = newBookList;
-                return;
+    const updateAuthor = await AuthorModel.findOneAndUpdate(
+        {
+            id: parseInt(req.params.authorId)
+        },
+        {
+            $pull: {
+                books: req.params.isbn
+            }
+        },
+        {
+            new: true
         }
-    });
+    );
 
-    return res.json({book: database.books,author: database.author});
+    // update the book id
+    // database.books.forEach((book) => {
+    //     if (book.ISBN === req.params.isbn) {
+    //         const newAuthorList = book.author.filter((author) => author !== parseInt(req.params.authorId));
+    //         book.author = newAuthorList;
+    //         return;
+    //     }
+    // });
+
+    // update author database
+    // database.author.forEach((author) => {
+    //     if (author.id === parseInt(req.params.authorId)) {
+    //         const newBookList = author.books.filter(
+    //             (book) => book !== req.params.isbn
+    //             );
+
+    //             author.books = newBookList;
+    //             return;
+    //     }
+    // });
+
+    // return res.json({book: database.books,author: database.author});
+
+    //update book database
+    
 });
 
 /* 
