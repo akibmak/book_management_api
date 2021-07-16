@@ -159,14 +159,14 @@ booky.post("/book/add", async (req, res) => {
 //the browser can only perform get request to perform other req we need to use helper
 
 /* 
-Route       -> /author/add
+Route       -> /author/new
 Description -> add new author
 Access      -> public
 parameter   -> NONE
 Methods     -> POST
 */
 
-booky.post("/author/add", (req, res) => {
+booky.post("/author/new", (req, res) => {
     const { newAuthor } = req.body;
 
     AuthorModel.create(newAuthor);
@@ -243,31 +243,69 @@ booky.put("/book/update/title/:isbn", async (req, res) => {
 
 /* 
 Route       -> /book/update/author
-Description -> Update/add the author name for a book
+Description -> Update/add the author 
 Access      -> public
-parameter   -> NONE
+parameter   -> isbn
 Methods     -> PUT
 */
 
-booky.put("/book/update/author/:isbn/:authorId", (req, res) => {
+booky.put("/book/update/author/:isbn", async (req, res) => {
+
     //update book database
-    database.books.forEach((book) => {
-        if (book.ISBN === req.params.isbn) {
-            return book.author.push(parseInt(req.params.authorId));
-        }
-    });
+    // database.books.forEach((book) => {
+    //     if (book.ISBN === req.params.isbn) {
+    //         return book.author.push(parseInt(req.params.authorId));
+    //     }
+    // });
 
     //update author database
-    database.author.forEach((author) => {
-        if (author.id === parseInt(req.params.authorId)) {
-            return author.books.push(req.params.isbn);
+    // database.author.forEach((author) => {
+    //     if (author.id === parseInt(req.params.authorId)) {
+    //         return author.books.push(req.params.isbn);
+    //     }
+    // });
+
+    // return res.json({
+    //     books: database.books,
+    //     author: database.author
+    // });
+
+    //Upadate the Book databse
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn
+        },
+        {
+            $push: {
+                authors: req.body.newAuthor
+            }
+        },
+        {
+            new: true
         }
-    });
+    );
+
+    //update the author model
+    const updatedAuthor = await AuthorModel.findOneAndUpdate(
+        {
+            id: req.body.newAuthor
+        },
+        {
+            $addToSet: {
+                books: req.params.isbn
+            }
+        },
+        {
+            new: true
+        }
+    );
 
     return res.json({
-        books: database.books,
-        author: database.author
+        books: updatedBook,
+        authors: updatedAuthor,
+        message: "New Author was added!"
     });
+
 });
 
 /* 
