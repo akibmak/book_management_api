@@ -59,5 +59,7 @@
     DELETE
     delete the publication
     delete a book from publication
+
+    Add Mongoose validation to all the models
 */
 

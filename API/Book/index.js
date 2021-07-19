@@ -68,20 +68,26 @@ Router.get("/c/:category", async (req, res) => {
 });
 
 /* 
-Route       -> /book/add
+Route       -> /book/new
 Description -> add new book
 Access      -> public
 parameter   -> NONE
 Methods     -> POST
 */
 
-Router.post("/add", async (req, res) => {
-    const { newBook } = req.body;
+Router.post("/new", async (req, res) => {
+    try{
+        const { newBook } = req.body;
 
-    const addNewBook = BookModel.create(newBook);
+        await BookModel.create(newBook);
 
-   // database.books.push(newBook);
-    return res.json({ books: addNewBook, message: "book was added!" });
+        // database.books.push(newBook);
+        return res.json({ message: "book was added!" });
+    }catch (error){
+        //throw new Error(error);
+        return res.json({error: error.message});
+    }
+    
 });
 
 /* 
